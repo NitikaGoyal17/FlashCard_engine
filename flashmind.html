@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FlashMind — by Cuemath</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f0e17; --surface: #1a1928; --surface2: #232235; --surface3: #2d2b45;
+    --accent: #e8c547; --accent2: #a78bfa; --accent3: #34d399;
+    --text: #f4f0ff; --text2: #a09ab8; --text3: #6b6585;
+    --danger: #f87171; --success: #34d399; --warning: #fbbf24;
+    --radius: 16px; --radius-sm: 10px;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+  }
+  body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  .app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* Sidebar */
+  .sidebar { width: 260px; background: var(--surface); border-right: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-logo { padding: 24px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .logo-text { font-family: var(--font-display); font-size: 22px; color: var(--accent); letter-spacing: -0.5px; }
+  .logo-sub { font-size: 11px; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
+  .sidebar-nav { padding: 12px 12px; }
+  .nav-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1.5px; padding: 8px 8px 6px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 14px; color: var(--text2); margin-bottom: 2px; transition: all 0.15s; border: none; background: none; width: 100%; text-align: left; }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(232,197,71,0.12); color: var(--accent); }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .deck-list { padding: 0 12px 12px; flex: 1; overflow-y: auto; }
+  .deck-item { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; color: var(--text2); margin-bottom: 1px; transition: all 0.15s; border: none; background: none; width: 100%; text-align: left; }
+  .deck-item:hover { background: var(--surface2); color: var(--text); }
+  .deck-item.active { background: var(--surface2); color: var(--text); }
+  .deck-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .deck-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .deck-count { font-size: 11px; color: var(--text3); }
+  .sidebar-bottom { padding: 16px; border-top: 1px solid rgba(255,255,255,0.06); }
+  .upload-btn { width: 100%; background: var(--accent); color: #0f0e17; border: none; border-radius: var(--radius-sm); padding: 11px; font-family: var(--font-body); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .upload-btn:hover { background: #f0d060; transform: translateY(-1px); }
+
+  /* Main */
+  .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+  .view { flex: 1; display: none; padding: 32px; }
+  .view.active { display: flex; flex-direction: column; }
+
+  /* Dashboard */
+  .dash-header { margin-bottom: 28px; }
+  .dash-greeting { font-family: var(--font-display); font-size: 32px; font-weight: 400; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .dash-sub { color: var(--text2); font-size: 15px; }
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+  .stat-card { background: var(--surface); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius); padding: 20px; }
+  .stat-val { font-size: 32px; font-weight: 600; line-height: 1; margin-bottom: 4px; }
+  .stat-label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; }
+  .stat-icon { font-size: 20px; margin-bottom: 8px; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-title { font-size: 17px; font-weight: 600; }
+  .section-link { font-size: 13px; color: var(--accent2); cursor: pointer; background: none; border: none; font-family: var(--font-body); }
+  .decks-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
+  .deck-card { background: var(--surface); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius); padding: 20px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+  .deck-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.12); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+  .deck-card-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 3px 3px 0 0; }
+  .deck-card-subject { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px; }
+  .deck-card-name { font-size: 16px; font-weight: 600; margin-bottom: 12px; line-height: 1.3; }
+  .deck-card-meta { display: flex; gap: 12px; font-size: 12px; color: var(--text3); }
+  .deck-card-progress { margin-top: 14px; }
+  .prog-bar { background: rgba(255,255,255,0.08); border-radius: 4px; height: 4px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+  .prog-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); margin-top: 6px; }
+  .due-soon { background: var(--surface); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius); padding: 20px; }
+  .due-item { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .due-item:last-child { border-bottom: none; }
+  .due-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .due-info { flex: 1; }
+  .due-deck { font-size: 12px; color: var(--text3); margin-bottom: 2px; }
+  .due-q { font-size: 14px; }
+  .due-when { font-size: 12px; color: var(--text3); }
+  .study-btn { background: rgba(232,197,71,0.12); color: var(--accent); border: 1px solid rgba(232,197,71,0.2); border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer; font-family: var(--font-body); transition: all 0.15s; }
+  .study-btn:hover { background: rgba(232,197,71,0.2); }
+  .streak-bar { display: flex; gap: 4px; margin-top: 12px; }
+  .streak-day { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--text3); font-weight: 600; }
+  .streak-day.done { background: rgba(232,197,71,0.3); color: var(--accent); }
+  .streak-day.today { background: var(--accent); color: #0f0e17; }
+  .streak-day.empty { background: rgba(255,255,255,0.04); }
+
+  /* Study */
+  .study-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+  .back-btn { background: var(--surface2); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 14px; color: var(--text2); font-size: 14px; cursor: pointer; font-family: var(--font-body); display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
+  .back-btn:hover { color: var(--text); background: var(--surface3); }
+  .study-deck-name { font-family: var(--font-display); font-size: 24px; flex: 1; }
+  .study-progress-wrap { display: flex; align-items: center; gap: 12px; }
+  .study-count { font-size: 14px; color: var(--text2); }
+  .study-prog-bar { width: 120px; background: rgba(255,255,255,0.08); border-radius: 4px; height: 6px; overflow: hidden; }
+  .study-prog-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width 0.4s ease; }
+  .card-arena { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; }
+  .flashcard-wrap { perspective: 1200px; width: 600px; max-width: 100%; }
+  .flashcard { width: 100%; min-height: 340px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4,0,0.2,1); cursor: pointer; }
+  .flashcard.flipped { transform: rotateX(180deg); }
+  .card-face { position: absolute; top: 0; left: 0; right: 0; min-height: 340px; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 20px; padding: 40px; display: flex; flex-direction: column; }
+  .card-front { background: var(--surface); border: 1px solid rgba(255,255,255,0.08); }
+  .card-back { background: var(--surface2); border: 1px solid rgba(255,255,255,0.1); transform: rotateX(180deg); }
+  .card-tag { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px; opacity: 0.5; }
+  .card-question { font-family: var(--font-display); font-size: 26px; font-weight: 400; line-height: 1.4; flex: 1; display: flex; align-items: center; }
+  .card-answer { font-size: 17px; line-height: 1.6; flex: 1; display: flex; align-items: flex-start; padding-top: 8px; }
+  .card-hint { margin-top: auto; font-size: 13px; color: var(--text3); display: flex; align-items: center; gap: 6px; }
+  .rating-row { display: flex; gap: 12px; margin-top: 28px; justify-content: center; }
+  .rate-btn { flex: 1; max-width: 130px; padding: 14px 0; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .rate-btn:hover { transform: translateY(-2px); }
+  .rate-btn .shortcut { font-size: 10px; font-weight: 400; opacity: 0.6; }
+  .rate-again { background: rgba(248,113,113,0.15); color: var(--danger); border: 1px solid rgba(248,113,113,0.3); }
+  .rate-again:hover { background: rgba(248,113,113,0.25); }
+  .rate-hard { background: rgba(251,191,36,0.15); color: var(--warning); border: 1px solid rgba(251,191,36,0.3); }
+  .rate-hard:hover { background: rgba(251,191,36,0.25); }
+  .rate-good { background: rgba(52,211,153,0.15); color: var(--success); border: 1px solid rgba(52,211,153,0.3); }
+  .rate-good:hover { background: rgba(52,211,153,0.25); }
+  .rate-easy { background: rgba(167,139,250,0.15); color: var(--accent2); border: 1px solid rgba(167,139,250,0.3); }
+  .rate-easy:hover { background: rgba(167,139,250,0.25); }
+  .flip-hint { text-align: center; margin-top: 16px; font-size: 13px; color: var(--text3); }
+  .session-done { text-align: center; padding: 60px 40px; }
+  .done-icon { font-size: 56px; margin-bottom: 16px; }
+  .done-title { font-family: var(--font-display); font-size: 32px; margin-bottom: 8px; }
+  .done-sub { color: var(--text2); font-size: 16px; margin-bottom: 28px; }
+  .done-stats { display: flex; gap: 24px; justify-content: center; margin-bottom: 32px; }
+  .done-stat { text-align: center; }
+  .done-stat-val { font-size: 28px; font-weight: 600; }
+  .done-stat-label { font-size: 12px; color: var(--text3); }
+  .done-btn { background: var(--accent); color: #0f0e17; border: none; border-radius: var(--radius-sm); padding: 12px 28px; font-family: var(--font-body); font-size: 15px; font-weight: 600; cursor: pointer; }
+
+  /* Upload */
+  .upload-view { align-items: center; justify-content: center; }
+  .upload-container { width: 100%; max-width: 560px; }
+  .upload-title { font-family: var(--font-display); font-size: 36px; text-align: center; margin-bottom: 8px; }
+  .upload-sub { text-align: center; color: var(--text2); margin-bottom: 32px; font-size: 16px; }
+  .drop-zone { border: 2px dashed rgba(255,255,255,0.15); border-radius: 20px; padding: 48px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface); }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: rgba(232,197,71,0.05); }
+  .drop-icon { font-size: 40px; margin-bottom: 12px; }
+  .drop-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+  .drop-sub { font-size: 14px; color: var(--text3); }
+  .file-input { display: none; }
+  .options-row { display: flex; gap: 12px; margin-top: 20px; }
+  .opt-input { flex: 1; background: var(--surface); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-sm); padding: 12px 16px; color: var(--text); font-family: var(--font-body); font-size: 14px; outline: none; }
+  .opt-input:focus { border-color: var(--accent); }
+  .gen-btn { background: var(--accent); color: #0f0e17; border: none; border-radius: var(--radius-sm); padding: 12px 24px; font-family: var(--font-body); font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+  .gen-btn:hover { background: #f0d060; }
+  .gen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .generating { background: var(--surface); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 40px; text-align: center; margin-top: 24px; display: none; }
+  .generating.show { display: block; }
+  .gen-spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .gen-status { font-size: 15px; color: var(--text2); margin-bottom: 8px; }
+  .gen-progress { font-size: 13px; color: var(--text3); }
+
+  /* Deck Detail */
+  .deck-detail-header { margin-bottom: 28px; }
+  .deck-detail-title { font-family: var(--font-display); font-size: 30px; margin-bottom: 6px; }
+  .deck-detail-meta { color: var(--text2); font-size: 14px; display: flex; gap: 16px; align-items: center; }
+  .action-row { display: flex; gap: 12px; margin-bottom: 28px; }
+  .primary-btn { background: var(--accent); color: #0f0e17; border: none; border-radius: var(--radius-sm); padding: 11px 24px; font-family: var(--font-body); font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .primary-btn:hover { background: #f0d060; }
+  .secondary-btn { background: var(--surface2); color: var(--text); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-sm); padding: 11px 24px; font-family: var(--font-body); font-size: 15px; cursor: pointer; transition: all 0.15s; }
+  .secondary-btn:hover { background: var(--surface3); }
+  .mastery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+  .mastery-card { background: var(--surface); border-radius: var(--radius); padding: 16px 20px; border: 1px solid rgba(255,255,255,0.06); }
+  .mastery-val { font-size: 28px; font-weight: 600; margin-bottom: 2px; }
+  .mastery-label { font-size: 12px; color: var(--text3); }
+  .cards-table { background: var(--surface); border-radius: var(--radius); overflow: hidden; border: 1px solid rgba(255,255,255,0.06); }
+  .table-header { display: grid; grid-template-columns: 1fr 100px 100px; gap: 16px; padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; }
+  .table-row { display: grid; grid-template-columns: 1fr 100px 100px; gap: 16px; padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 14px; align-items: center; }
+  .table-row:last-child { border-bottom: none; }
+  .table-row:hover { background: rgba(255,255,255,0.02); }
+  .card-q-preview { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mastery-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+  .badge-new { background: rgba(167,139,250,0.15); color: var(--accent2); }
+  .badge-learning { background: rgba(251,191,36,0.15); color: var(--warning); }
+  .badge-mastered { background: rgba(52,211,153,0.15); color: var(--success); }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-up { animation: fadeUp 0.4s ease forwards; }
+  @keyframes cardIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  .card-in { animation: cardIn 0.3s ease forwards; }
+
+  /* API Key modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 100; }
+  .modal { background: var(--surface); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 32px; width: 480px; max-width: 90vw; }
+  .modal-title { font-family: var(--font-display); font-size: 22px; margin-bottom: 8px; }
+  .modal-sub { color: var(--text2); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+  .modal-input { width: 100%; background: var(--surface2); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-sm); padding: 12px 16px; color: var(--text); font-family: var(--font-body); font-size: 14px; outline: none; margin-bottom: 12px; }
+  .modal-input:focus { border-color: var(--accent); }
+  .modal-btns { display: flex; gap: 10px; }
+  .modal-save { flex: 1; background: var(--accent); color: #0f0e17; border: none; border-radius: var(--radius-sm); padding: 11px; font-family: var(--font-body); font-size: 14px; font-weight: 600; cursor: pointer; }
+  .modal-cancel { background: var(--surface2); color: var(--text2); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-sm); padding: 11px 20px; font-family: var(--font-body); font-size: 14px; cursor: pointer; }
+  .api-note { font-size: 11px; color: var(--text3); margin-top: 10px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<!-- API Key Modal -->
+<div class="modal-overlay" id="api-modal" style="display:none;">
+  <div class="modal">
+    <div class="modal-title">Enter your Anthropic API Key</div>
+    <div class="modal-sub">FlashMind uses Claude AI to generate flashcards from your PDFs. Your key is stored only in your browser's localStorage and never sent anywhere except Anthropic's API.</div>
+    <input type="password" class="modal-input" id="api-key-input" placeholder="sk-ant-..." />
+    <div class="modal-btns">
+      <button class="modal-save" onclick="saveApiKey()">Save & Continue</button>
+      <button class="modal-cancel" onclick="document.getElementById('api-modal').style.display='none'">Cancel</button>
+    </div>
+    <div class="api-note">Get your key at console.anthropic.com · We recommend claude-sonnet-4-20250514</div>
+  </div>
+</div>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-text">FlashMind</div>
+      <div class="logo-sub">by Cuemath</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Navigation</div>
+      <button class="nav-item active" onclick="showView('dashboard')" id="nav-dashboard">
+        <svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" onclick="showView('upload')" id="nav-upload">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 11V3M5 6l3-3 3 3M3 13h10"/></svg>
+        Import PDF
+      </button>
+      <button class="nav-item" onclick="showApiModal()" id="nav-apikey" style="margin-top:4px;">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="10" r="3"/><path d="M9 7l5-5M12 2l2 2M10 4l2 2"/></svg>
+        API Key
+      </button>
+    </nav>
+    <div class="deck-list" id="sidebar-decks">
+      <div class="nav-label" style="padding: 0 8px 6px;">Your Decks</div>
+    </div>
+    <div class="sidebar-bottom">
+      <button class="upload-btn" onclick="showView('upload')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v8M5 5l3-3 3 3M2 12h12v2H2z"/></svg>
+        New Deck from PDF
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <!-- Dashboard -->
+    <section class="view active" id="view-dashboard">
+      <div class="dash-header fade-up">
+        <div class="dash-greeting" id="dash-greeting">Good day, student ✦</div>
+        <div class="dash-sub">You have <span id="due-count" style="color:var(--accent);font-weight:600;">0</span> cards due for review today.</div>
+        <div class="streak-bar" id="streak-bar"></div>
+      </div>
+      <div class="stats-row fade-up">
+        <div class="stat-card">
+          <div class="stat-icon">🃏</div>
+          <div class="stat-val" id="stat-total">0</div>
+          <div class="stat-label">Total Cards</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-val" style="color:var(--success)" id="stat-mastered">0</div>
+          <div class="stat-label">Mastered</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🔥</div>
+          <div class="stat-val" style="color:var(--accent)" id="stat-streak">0</div>
+          <div class="stat-label">Day Streak</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📚</div>
+          <div class="stat-val" style="color:var(--accent2)" id="stat-decks">0</div>
+          <div class="stat-label">Decks</div>
+        </div>
+      </div>
+      <div class="section-header">
+        <div class="section-title">Your Decks</div>
+        <button class="section-link" onclick="showView('upload')">+ New Deck</button>
+      </div>
+      <div class="decks-grid" id="decks-grid"></div>
+      <div class="section-header">
+        <div class="section-title">Due for Review</div>
+      </div>
+      <div class="due-soon" id="due-list"></div>
+    </section>
+
+    <!-- Upload -->
+    <section class="view upload-view" id="view-upload">
+      <div class="upload-container">
+        <div class="upload-title fade-up">Drop a PDF.</div>
+        <div class="upload-sub fade-up">We'll turn it into a smart deck of flashcards — ready to study.</div>
+        <div class="drop-zone fade-up" id="drop-zone" onclick="document.getElementById('pdf-input').click()">
+          <div class="drop-icon">📄</div>
+          <div class="drop-title">Drop your PDF here</div>
+          <div class="drop-sub">or click to browse · Chapter notes, textbooks, lecture slides</div>
+          <input type="file" id="pdf-input" class="file-input" accept=".pdf,.txt" />
+        </div>
+        <div class="options-row fade-up">
+          <input type="text" class="opt-input" id="deck-name-input" placeholder="Deck name (optional)" />
+          <input type="number" class="opt-input" id="card-count-input" placeholder="# cards" value="12" min="5" max="30" style="width:90px;flex:none;" />
+          <button class="gen-btn" id="gen-btn" onclick="generateDeck()" disabled>Generate ✦</button>
+        </div>
+        <div id="file-name-display" style="font-size:13px;color:var(--accent);margin-top:8px;padding:0 4px;display:none;"></div>
+        <div class="generating" id="generating-box">
+          <div class="gen-spinner"></div>
+          <div class="gen-status" id="gen-status">Reading your PDF...</div>
+          <div class="gen-progress" id="gen-progress">Extracting key concepts</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Deck Detail -->
+    <section class="view" id="view-deck">
+      <div class="deck-detail-header">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+          <button class="back-btn" onclick="showView('dashboard')">← Back</button>
+          <div class="deck-detail-title" id="detail-title">Deck Name</div>
+        </div>
+        <div class="deck-detail-meta" id="detail-meta"></div>
+      </div>
+      <div class="action-row">
+        <button class="primary-btn" onclick="startStudy(false)">Study Now →</button>
+        <button class="secondary-btn" onclick="startStudy(true)">Review Due Cards</button>
+      </div>
+      <div class="mastery-grid" id="mastery-grid"></div>
+      <div class="section-header"><div class="section-title">All Cards</div></div>
+      <div class="cards-table">
+        <div class="table-header"><span>Question</span><span>Status</span><span>Next Review</span></div>
+        <div id="cards-table-body"></div>
+      </div>
+    </section>
+
+    <!-- Study -->
+    <section class="view" id="view-study" style="padding:28px 40px;">
+      <div class="study-header">
+        <button class="back-btn" onclick="exitStudy()">← Exit</button>
+        <div class="study-deck-name" id="study-deck-name">Studying</div>
+        <div class="study-progress-wrap">
+          <span class="study-count" id="study-count">0 / 0</span>
+          <div class="study-prog-bar"><div class="study-prog-fill" id="study-prog-fill" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div class="card-arena" id="card-arena">
+        <div class="flashcard-wrap">
+          <div class="flashcard card-in" id="flashcard" onclick="flipCard()">
+            <div class="card-face card-front">
+              <div class="card-tag" id="card-tag">Question</div>
+              <div class="card-question" id="card-question">Loading...</div>
+              <div class="card-hint">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 1v12M1 7h12"/></svg>
+                Click to reveal answer
+              </div>
+            </div>
+            <div class="card-face card-back">
+              <div class="card-tag">Answer</div>
+              <div class="card-answer" id="card-answer">Answer goes here</div>
+            </div>
+          </div>
+        </div>
+        <div class="flip-hint" id="flip-hint">Click the card or press Space</div>
+        <div class="rating-row" id="rating-row" style="display:none;">
+          <button class="rate-btn rate-again" onclick="rateCard(0)">Again<span class="shortcut">0 / ← key</span></button>
+          <button class="rate-btn rate-hard" onclick="rateCard(1)">Hard<span class="shortcut">1 key</span></button>
+          <button class="rate-btn rate-good" onclick="rateCard(2)">Good<span class="shortcut">2 key</span></button>
+          <button class="rate-btn rate-easy" onclick="rateCard(3)">Easy<span class="shortcut">3 key</span></button>
+        </div>
+        <div id="session-done" style="display:none;" class="session-done">
+          <div class="done-icon">🎉</div>
+          <div class="done-title">Session complete!</div>
+          <div class="done-sub" id="done-sub">Great work on today's review.</div>
+          <div class="done-stats" id="done-stats"></div>
+          <button class="done-btn" onclick="exitStudy()">Back to Deck →</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let state = {
+  decks: [],
+  activeDeckId: null,
+  studyQueue: [],
+  studyIdx: 0,
+  cardFlipped: false,
+  sessionStats: { again: 0, hard: 0, good: 0, easy: 0 },
+  streak: 0,
+  pdfText: null,
+  pdfBase64: null,
+  uploadedFileName: null
+};
+
+const DECK_COLORS = ['#e8c547','#a78bfa','#34d399','#f87171','#60a5fa','#fb923c','#f472b6'];
+
+// ── Persistence ─────────────────────────────────────────────────────────────
+function saveState() {
+  try { localStorage.setItem('flashmind_state', JSON.stringify({ decks: state.decks, streak: state.streak })); } catch(e) {}
+}
+function loadState() {
+  try {
+    const saved = localStorage.getItem('flashmind_state');
+    if (saved) { const d = JSON.parse(saved); state.decks = d.decks || []; state.streak = d.streak || 0; }
+  } catch(e) {}
+}
+
+// ── API Key ─────────────────────────────────────────────────────────────────
+function getApiKey() { return localStorage.getItem('flashmind_api_key') || ''; }
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key) return alert('Please enter an API key.');
+  localStorage.setItem('flashmind_api_key', key);
+  document.getElementById('api-modal').style.display = 'none';
+}
+function showApiModal() {
+  document.getElementById('api-key-input').value = getApiKey();
+  document.getElementById('api-modal').style.display = 'flex';
+}
+
+// ── SM-2 ────────────────────────────────────────────────────────────────────
+function sm2(card, quality) {
+  let { interval, repetitions, easeFactor } = card;
+  if (quality < 1) { repetitions = 0; interval = 1; }
+  else {
+    if (repetitions === 0) interval = 1;
+    else if (repetitions === 1) interval = 4;
+    else interval = Math.round(interval * easeFactor);
+    repetitions++;
+  }
+  easeFactor = Math.max(1.3, easeFactor + (0.1 - (5 - quality * 1.3) * (0.08 + (5 - quality * 1.3) * 0.02)));
+  const nextReview = Date.now() + interval * 86400000;
+  return { interval, repetitions, easeFactor, nextReview };
+}
+function newCardData() { return { interval: 0, repetitions: 0, easeFactor: 2.5, nextReview: Date.now(), mastery: 'new' }; }
+function getDueCards(deck) { return deck.cards.filter(c => c.nextReview <= Date.now() || c.mastery === 'new'); }
+function getMastery(card) {
+  if (card.mastery === 'new') return 'new';
+  if (card.repetitions >= 3 && card.easeFactor >= 2.2) return 'mastered';
+  if (card.repetitions >= 1) return 'learning';
+  return 'new';
+}
+
+// ── Views ───────────────────────────────────────────────────────────────────
+function showView(name, deckId) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  const navEl = document.getElementById('nav-' + name);
+  if (navEl) navEl.classList.add('active');
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'deck' && deckId !== undefined) { state.activeDeckId = deckId; renderDeckDetail(); }
+  if (name === 'upload') resetUpload();
+}
+
+// ── Dashboard ───────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const decks = state.decks;
+  const allCards = decks.flatMap(d => d.cards);
+  const mastered = allCards.filter(c => getMastery(c) === 'mastered').length;
+  const due = allCards.filter(c => c.nextReview <= Date.now() || c.mastery === 'new').length;
+  document.getElementById('stat-total').textContent = allCards.length;
+  document.getElementById('stat-mastered').textContent = mastered;
+  document.getElementById('stat-streak').textContent = state.streak;
+  document.getElementById('stat-decks').textContent = decks.length;
+  document.getElementById('due-count').textContent = due;
+
+  const hr = new Date().getHours();
+  const greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('dash-greeting').textContent = greet + ', student ✦';
+
+  const days = ['M','T','W','T','F','S','S'];
+  const todayIdx = (new Date().getDay() + 6) % 7;
+  document.getElementById('streak-bar').innerHTML = days.map((d,i) => {
+    const cls = i === todayIdx ? 'today' : (i < todayIdx ? 'done' : 'empty');
+    return `<div class="streak-day ${cls}">${d}</div>`;
+  }).join('');
+
+  const grid = document.getElementById('decks-grid');
+  if (decks.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text3);">
+      <div style="font-size:32px;margin-bottom:12px;">📚</div>
+      <div style="font-size:16px;margin-bottom:8px;">No decks yet</div>
+      <button onclick="showView('upload')" style="background:var(--accent);color:#0f0e17;border:none;border-radius:8px;padding:10px 20px;font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer;">Import your first PDF</button>
+    </div>`;
+  } else {
+    grid.innerHTML = decks.map(d => {
+      const dueN = getDueCards(d).length;
+      const mastN = d.cards.filter(c => getMastery(c) === 'mastered').length;
+      const pct = d.cards.length ? Math.round((mastN / d.cards.length) * 100) : 0;
+      return `<div class="deck-card" onclick="showView('deck', ${d.id})">
+        <div class="deck-card-accent" style="background:${d.color}"></div>
+        <div class="deck-card-subject" style="color:${d.color}">${d.subject}</div>
+        <div class="deck-card-name">${d.name}</div>
+        <div class="deck-card-meta">
+          <span>${d.cards.length} cards</span>
+          ${dueN > 0 ? `<span style="color:${d.color}">${dueN} due</span>` : '<span style="color:var(--success)">All caught up ✓</span>'}
+        </div>
+        <div class="deck-card-progress">
+          <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${d.color}"></div></div>
+          <div class="prog-label"><span>${pct}% mastered</span><span>${mastN}/${d.cards.length}</span></div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const dueItems = decks.flatMap(d => getDueCards(d).slice(0,2).map(c => ({...c, deckName: d.name, deckColor: d.color, deckId: d.id})));
+  const dueList = document.getElementById('due-list');
+  if (dueItems.length === 0) {
+    dueList.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text3);">🎊 Nothing due! You're all caught up.</div>`;
+  } else {
+    dueList.innerHTML = dueItems.slice(0,6).map(c =>
+      `<div class="due-item">
+        <div class="due-dot" style="background:${c.deckColor}"></div>
+        <div class="due-info">
+          <div class="due-deck">${c.deckName}</div>
+          <div class="due-q">${c.question.substring(0,70)}${c.question.length>70?'…':''}</div>
+        </div>
+        <div class="due-when">${c.mastery==='new'?'New':'Due now'}</div>
+        <button class="study-btn" onclick="quickStudy(${c.deckId})">Study →</button>
+      </div>`
+    ).join('');
+  }
+
+  renderSidebarDecks();
+}
+
+function renderSidebarDecks() {
+  const el = document.getElementById('sidebar-decks');
+  const label = el.querySelector('.nav-label');
+  const items = state.decks.map(d =>
+    `<button class="deck-item ${state.activeDeckId===d.id?'active':''}" onclick="showView('deck',${d.id})">
+      <div class="deck-dot" style="background:${d.color}"></div>
+      <span class="deck-name">${d.name}</span>
+      <span class="deck-count">${d.cards.length}</span>
+    </button>`
+  ).join('');
+  el.innerHTML = '';
+  el.appendChild(label);
+  el.insertAdjacentHTML('beforeend', items);
+}
+
+// ── Deck Detail ─────────────────────────────────────────────────────────────
+function renderDeckDetail() {
+  const deck = state.decks.find(d => d.id === state.activeDeckId);
+  if (!deck) return;
+  document.getElementById('detail-title').textContent = deck.name;
+  const due = getDueCards(deck).length;
+  const mastered = deck.cards.filter(c => getMastery(c) === 'mastered').length;
+  const learning = deck.cards.filter(c => getMastery(c) === 'learning').length;
+  const newC = deck.cards.filter(c => getMastery(c) === 'new').length;
+  document.getElementById('detail-meta').innerHTML =
+    `<span>${deck.cards.length} cards</span><span>•</span><span style="color:${deck.color}">${due} due today</span><span>•</span><span>Created ${new Date(deck.created).toLocaleDateString()}</span>`;
+  document.getElementById('mastery-grid').innerHTML = `
+    <div class="mastery-card"><div class="mastery-val" style="color:var(--accent2)">${newC}</div><div class="mastery-label">New</div></div>
+    <div class="mastery-card"><div class="mastery-val" style="color:var(--warning)">${learning}</div><div class="mastery-label">Learning</div></div>
+    <div class="mastery-card"><div class="mastery-val" style="color:var(--success)">${mastered}</div><div class="mastery-label">Mastered</div></div>
+  `;
+  document.getElementById('cards-table-body').innerHTML = deck.cards.map(c => {
+    const m = getMastery(c);
+    const badgeClass = {new:'badge-new',learning:'badge-learning',mastered:'badge-mastered'}[m] || 'badge-new';
+    const nextRev = c.mastery==='new' ? 'Now' : (c.nextReview > Date.now() ? `In ${Math.ceil((c.nextReview-Date.now())/86400000)}d` : 'Due');
+    return `<div class="table-row">
+      <div class="card-q-preview">${c.question}</div>
+      <div><span class="mastery-badge ${badgeClass}">${m}</span></div>
+      <div style="color:var(--text3);font-size:13px;">${nextRev}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Study ────────────────────────────────────────────────────────────────────
+function startStudy(dueOnly) {
+  const deck = state.decks.find(d => d.id === state.activeDeckId);
+  if (!deck) return;
+  let queue = dueOnly ? getDueCards(deck) : [...deck.cards];
+  queue.sort((a,b) => a.nextReview - b.nextReview);
+  if (queue.length === 0) { alert('No cards to study! All caught up.'); return; }
+  state.studyQueue = queue;
+  state.studyIdx = 0;
+  state.sessionStats = { again:0, hard:0, good:0, easy:0 };
+  state.cardFlipped = false;
+  document.getElementById('study-deck-name').textContent = deck.name;
+  document.getElementById('session-done').style.display = 'none';
+  document.getElementById('flashcard').style.display = 'block';
+  document.getElementById('flip-hint').style.display = 'block';
+  showView('study');
+  renderStudyCard();
+}
+
+function quickStudy(deckId) { state.activeDeckId = deckId; startStudy(true); }
+
+function renderStudyCard() {
+  const card = state.studyQueue[state.studyIdx];
+  if (!card) { showSessionDone(); return; }
+  const total = state.studyQueue.length;
+  const pct = Math.round((state.studyIdx / total) * 100);
+  document.getElementById('study-count').textContent = `${state.studyIdx + 1} / ${total}`;
+  document.getElementById('study-prog-fill').style.width = pct + '%';
+  document.getElementById('card-tag').textContent = card.type || 'Concept';
+  document.getElementById('card-question').textContent = card.question;
+  document.getElementById('card-answer').textContent = card.answer;
+  const fc = document.getElementById('flashcard');
+  fc.classList.remove('flipped');
+  fc.classList.remove('card-in');
+  void fc.offsetWidth;
+  fc.classList.add('card-in');
+  state.cardFlipped = false;
+  document.getElementById('rating-row').style.display = 'none';
+  document.getElementById('flip-hint').style.display = 'block';
+  document.getElementById('flashcard').style.display = 'block';
+}
+
+function flipCard() {
+  if (state.studyIdx >= state.studyQueue.length) return;
+  state.cardFlipped = !state.cardFlipped;
+  document.getElementById('flashcard').classList.toggle('flipped', state.cardFlipped);
+  if (state.cardFlipped) {
+    document.getElementById('rating-row').style.display = 'flex';
+    document.getElementById('flip-hint').style.display = 'none';
+  }
+}
+
+function rateCard(quality) {
+  const card = state.studyQueue[state.studyIdx];
+  const labels = ['again','hard','good','easy'];
+  state.sessionStats[labels[quality]]++;
+  const result = sm2(card, quality);
+  Object.assign(card, result);
+  card.mastery = quality >= 2 ? (card.repetitions >= 3 ? 'mastered' : 'learning') : 'learning';
+  state.studyIdx++;
+  saveState();
+  if (state.studyIdx >= state.studyQueue.length) showSessionDone();
+  else renderStudyCard();
+}
+
+function showSessionDone() {
+  document.getElementById('flashcard').style.display = 'none';
+  document.getElementById('rating-row').style.display = 'none';
+  document.getElementById('flip-hint').style.display = 'none';
+  document.getElementById('session-done').style.display = 'block';
+  const s = state.sessionStats;
+  const total = s.again + s.hard + s.good + s.easy;
+  document.getElementById('done-sub').textContent = `Reviewed ${total} cards. Keep it up!`;
+  document.getElementById('done-stats').innerHTML = `
+    <div class="done-stat"><div class="done-stat-val" style="color:var(--danger)">${s.again}</div><div class="done-stat-label">Again</div></div>
+    <div class="done-stat"><div class="done-stat-val" style="color:var(--warning)">${s.hard}</div><div class="done-stat-label">Hard</div></div>
+    <div class="done-stat"><div class="done-stat-val" style="color:var(--success)">${s.good}</div><div class="done-stat-label">Good</div></div>
+    <div class="done-stat"><div class="done-stat-val" style="color:var(--accent2)">${s.easy}</div><div class="done-stat-label">Easy</div></div>
+  `;
+}
+
+function exitStudy() { showView('deck', state.activeDeckId); }
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('view-study').classList.contains('active')) return;
+  if (e.code === 'Space') { e.preventDefault(); flipCard(); }
+  if (document.getElementById('rating-row').style.display !== 'none') {
+    if (e.key === '0' || e.key === 'ArrowLeft') rateCard(0);
+    if (e.key === '1') rateCard(1);
+    if (e.key === '2') rateCard(2);
+    if (e.key === '3') rateCard(3);
+  }
+});
+
+// ── Upload & Generate ────────────────────────────────────────────────────────
+function resetUpload() {
+  state.pdfText = null; state.pdfBase64 = null; state.uploadedFileName = null;
+  document.getElementById('pdf-input').value = '';
+  document.getElementById('file-name-display').style.display = 'none';
+  document.getElementById('gen-btn').disabled = true;
+  document.getElementById('generating-box').classList.remove('show');
+}
+
+document.getElementById('pdf-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  state.uploadedFileName = file.name;
+  document.getElementById('file-name-display').textContent = '📎 ' + file.name;
+  document.getElementById('file-name-display').style.display = 'block';
+  const nameInput = document.getElementById('deck-name-input');
+  if (!nameInput.value) nameInput.value = file.name.replace(/\.pdf$/i,'').replace(/[_-]/g,' ');
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    if (file.type === 'text/plain') { state.pdfText = ev.target.result; }
+    else { state.pdfBase64 = ev.target.result.split(',')[1]; state.pdfText = '__PDF_BASE64__'; }
+    document.getElementById('gen-btn').disabled = false;
+  };
+  if (file.type === 'text/plain') reader.readAsText(file);
+  else reader.readAsDataURL(file);
+});
+
+const dropZone = document.getElementById('drop-zone');
+['dragenter','dragover'].forEach(ev => dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.add('drag-over'); }));
+['dragleave','drop'].forEach(ev => dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.remove('drag-over'); }));
+dropZone.addEventListener('drop', e => {
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const dt = new DataTransfer(); dt.items.add(file);
+    document.getElementById('pdf-input').files = dt.files;
+    document.getElementById('pdf-input').dispatchEvent(new Event('change'));
+  }
+});
+
+async function generateDeck() {
+  const apiKey = getApiKey();
+  if (!apiKey) { showApiModal(); return; }
+
+  const genBox = document.getElementById('generating-box');
+  const genStatus = document.getElementById('gen-status');
+  const genProgress = document.getElementById('gen-progress');
+  const genBtn = document.getElementById('gen-btn');
+  const deckName = document.getElementById('deck-name-input').value || 'My Deck';
+  const cardCount = parseInt(document.getElementById('card-count-input').value) || 12;
+
+  genBox.classList.add('show');
+  genBtn.disabled = true;
+  genStatus.textContent = 'Reading your document...';
+  genProgress.textContent = 'Identifying key concepts';
+
+  try {
+    let messages;
+    if (state.pdfText === '__PDF_BASE64__') {
+      messages = [{ role: 'user', content: [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: state.pdfBase64 } },
+        { type: 'text', text: buildPrompt(cardCount) }
+      ]}];
+    } else {
+      messages = [{ role: 'user', content: `${buildPrompt(cardCount)}\n\n---DOCUMENT---\n${state.pdfText}` }];
+    }
+
+    genStatus.textContent = 'Generating flashcards with Claude AI...';
+    genProgress.textContent = 'Crafting cards like a great teacher would';
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4000, messages })
+    });
+
+    if (!resp.ok) { const err = await resp.json(); throw new Error(err.error?.message || 'API error'); }
+    const data = await resp.json();
+    const text = data.content.map(b => b.text || '').join('');
+
+    genStatus.textContent = 'Building your deck...';
+    const clean = text.replace(/```json|```/g,'').trim();
+    let parsed;
+    try { parsed = JSON.parse(clean); }
+    catch(e) { const m = text.match(/\[[\s\S]*\]/); if (m) parsed = { cards: JSON.parse(m[0]) }; else throw new Error('Could not parse AI response'); }
+
+    const color = DECK_COLORS[state.decks.length % DECK_COLORS.length];
+    const deck = {
+      id: Date.now(), name: deckName,
+      subject: parsed.subject || 'General', color, created: Date.now(),
+      cards: parsed.cards.map((c, i) => ({ id: i, question: c.question, answer: c.answer, type: c.type || 'Concept', ...newCardData() }))
+    };
+    state.decks.push(deck);
+    state.activeDeckId = deck.id;
+    saveState();
+    genBox.classList.remove('show');
+    genBtn.disabled = false;
+    showView('deck', deck.id);
+    renderSidebarDecks();
+  } catch(err) {
+    genStatus.textContent = 'Something went wrong.';
+    genProgress.textContent = err.message;
+    genBtn.disabled = false;
+    console.error(err);
+  }
+}
+
+function buildPrompt(count) {
+  return `You are an expert educator creating a comprehensive flashcard deck. Analyze the provided document and create exactly ${count} high-quality flashcards.
+
+Requirements:
+- Cover key concepts, definitions, relationships, edge cases, and worked examples
+- Questions should test understanding, not just recall
+- Mix types: definitions, "why/how" explanations, comparisons, applications, edge cases
+- Answers should be complete but concise (2-5 sentences)
+- Cards should feel written by a great teacher
+
+Return ONLY valid JSON, no other text:
+{
+  "subject": "Brief subject area (e.g. Mathematics, History)",
+  "cards": [
+    { "question": "...", "answer": "...", "type": "Concept|Definition|Formula|Application|Example|Comparison" }
+  ]
+}`;
+}
+
+// ── Seed demo data ───────────────────────────────────────────────────────────
+function seedDemo() {
+  const now = Date.now();
+  const past = d => now - d * 86400000;
+  const future = d => now + d * 86400000;
+  state.decks = [
+    { id: 1, name: 'Quadratic Equations', subject: 'Mathematics', color: '#e8c547', created: past(10),
+      cards: [
+        { id:1, question:'What is the quadratic formula?', answer:'x = (-b ± √(b²-4ac)) / 2a, used to solve any equation of the form ax²+bx+c=0.', type:'Formula', interval:4, repetitions:2, easeFactor:2.5, nextReview:future(2), mastery:'learning' },
+        { id:2, question:'What does the discriminant (b²-4ac) tell us?', answer:'If >0: two distinct real roots. If =0: one repeated real root. If <0: no real roots (complex conjugate pair).', type:'Concept', interval:8, repetitions:3, easeFactor:2.6, nextReview:future(5), mastery:'mastered' },
+        { id:3, question:'How do you complete the square for x²+6x+5=0?', answer:'x²+6x+5=0 → (x+3)²−9+5=0 → (x+3)²=4 → x=−3±2. So x=−1 or x=−5.', type:'Example', interval:1, repetitions:0, easeFactor:2.5, nextReview:past(1), mastery:'new' },
+        { id:4, question:'What is the vertex form of a quadratic?', answer:'y = a(x−h)² + k, where (h,k) is the vertex of the parabola and a determines opening direction and width.', type:'Definition', interval:2, repetitions:1, easeFactor:2.3, nextReview:past(0.5), mastery:'learning' },
+        { id:5, question:'What are Vieta\'s formulas for ax²+bx+c=0?', answer:'Sum of roots = −b/a. Product of roots = c/a. Useful for checking solutions without solving.', type:'Concept', interval:0, repetitions:0, easeFactor:2.5, nextReview:now, mastery:'new' },
+      ]
+    },
+    { id: 2, name: 'French Revolution', subject: 'History', color: '#a78bfa', created: past(5),
+      cards: [
+        { id:1, question:'What were the three Estates?', answer:'First: Clergy. Second: Nobility. Third: Everyone else (~97%) — peasants, bourgeoisie, urban workers who bore the tax burden.', type:'Definition', interval:5, repetitions:2, easeFactor:2.4, nextReview:future(3), mastery:'learning' },
+        { id:2, question:'What was the Tennis Court Oath (June 1789)?', answer:'Members of the Third Estate swore not to disband until France had a written constitution, after being locked out of the Estates-General.', type:'Concept', interval:0, repetitions:0, easeFactor:2.5, nextReview:now, mastery:'new' },
+        { id:3, question:'Why was the storming of the Bastille significant?', answer:'July 14, 1789 — Parisians stormed the fortress-prison as a symbol of royal tyranny. It marked the Revolution turning violent and is now France\'s national day.', type:'Application', interval:10, repetitions:4, easeFactor:2.8, nextReview:future(8), mastery:'mastered' },
+        { id:4, question:'What was the Reign of Terror (1793–94)?', answer:'Period under Robespierre and the Committee of Public Safety. ~17,000 officially executed by guillotine. Ended with Robespierre\'s own execution on 9 Thermidor (July 27, 1794).', type:'Concept', interval:3, repetitions:2, easeFactor:2.2, nextReview:past(1), mastery:'learning' },
+      ]
+    }
+  ];
+  state.streak = 5;
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+loadState();
+if (state.decks.length === 0) seedDemo();
+renderDashboard();
+</script>
+</body>
+</html>
